@@ -708,9 +708,13 @@ def run_research_pipeline(query: str):
         add_log(f"Provider: {llm_provider.upper()} ({model_display})  |  Max revisions: {max_revisions}  |  Threshold: {quality_threshold}/10", "system")
 
         # ── Import here (so env vars are set first) ──
-        import importlib
-        import config as cfg
-        importlib.reload(cfg)
+        # Force a fresh import of the whole config -> graph.nodes -> graph.graph
+        # chain every run. A plain `importlib.reload(config)` only re-executes
+        # config.py — graph/nodes.py already bound its own QUALITY_THRESHOLD
+        # name at first import, so a sidebar change wouldn't actually take
+        # effect after the first run of a session without this.
+        for _mod_name in ("config", "graph.nodes", "graph.graph"):
+            sys.modules.pop(_mod_name, None)
         from graph.graph import build_graph
 
         # ── Planner ──
