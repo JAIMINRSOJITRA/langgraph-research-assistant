@@ -1,104 +1,129 @@
-# 🔬 Multi-Agent AI Research Assistant
+# 🚀 Multi-Agent AI Research Assistant
 
-> A production-quality LangGraph project featuring 5 specialized AI agents, a self-critique feedback loop, RAG (Retrieval-Augmented Generation), and live web search.
+A LangGraph pipeline where five specialized AI agents plan, research, analyze, write, and critique a report until it meets a quality bar.
 
----
+## 📌 Overview
 
-## 🏗️ Architecture
+Researching a topic well means breaking it down, gathering evidence, synthesizing it, and honestly checking the result. This project automates that loop with five cooperating agents (Planner, Researcher, Analyst, Writer, Critic) orchestrated as a cyclic LangGraph workflow. The Critic scores each draft and sends it back to the Writer for revision until it passes a configurable quality threshold. Reports are grounded in both a local knowledge base (RAG) and live web search.
 
-```
-START
-  ↓
-[Planner]       → breaks query into 3–5 focused sub-tasks
-  ↓
-[Researcher]    → fetches data (DuckDuckGo web + ChromaDB RAG)
-  ↓
-[Analyst]       → synthesizes findings into structured analysis
-  ↓
-[Writer]   ←────────────────────────────────┐
-  ↓                                          │ revise loop
-[Critic]   → score < 7/10? → send back ────┘
-  ↓
- END         (score ≥ 7/10 OR max revisions reached)
-```
+It is useful for students, analysts, and anyone who wants a structured, self-reviewed first draft on a topic.
 
----
+## ✨ Features
 
-## ⚡ Quick Start
+* Five specialized agents in a cyclic LangGraph graph: Planner → Researcher → Analyst → Writer ⇄ Critic
+* Self-critique loop: the Critic scores drafts and triggers automatic revisions until `QUALITY_THRESHOLD` is met or `MAX_REVISIONS` is reached
+* RAG with ChromaDB and HuggingFace embeddings, combined with live DuckDuckGo web search
+* Interactive Streamlit dashboard that shows agent execution as it happens
+* Configurable LLM backend: Groq (cloud) or Ollama (local)
+* Command-line modes: interactive REPL, `--demo`, or a single query
 
-```bash
-# 1. Clone and install
-pip install -r requirements.txt
+## 🛠️ Tech Stack
 
-# 2. Configure
-cp .env.example .env
-# → Add your GROQ_API_KEY (free at console.groq.com)
+* Language: Python
+* AI / LLM: Groq or Ollama (configurable)
+* Libraries: LangGraph, LangChain, ChromaDB, sentence-transformers (HuggingFace embeddings), DuckDuckGo Search, Streamlit
+* Tools: Git, GitHub, Jupyter Notebook
 
-# 3. Populate knowledge base
-python ingest.py
-
-# 4. Run!
-python main.py                         # interactive mode
-python main.py --demo                  # demo query
-python main.py "How does RAG work?"   # single query
-```
-
----
-
-## 📁 File Structure
+## 📂 Project Structure
 
 ```
-langgraph_research_assistant/
-├── config.py              # env config + LLM factory
-├── ingest.py              # one-time KB population script
-├── main.py                # entry point / REPL
-├── requirements.txt
-├── .env.example
-│
+langgraph-research-assistant/
+├── app.py              # Streamlit dashboard
+├── main.py             # CLI entry point (REPL / --demo / single query)
+├── ingest.py           # Builds the local knowledge base
+├── config.py           # Settings loaded from .env
 ├── graph/
-│   ├── state.py           # ResearchState TypedDict
-│   ├── nodes.py           # 5 agent functions + conditional edge
-│   └── graph.py           # StateGraph builder
-│
+│   ├── state.py        # Shared state schema
+│   ├── nodes.py        # The five agents + revision routing
+│   └── graph.py        # LangGraph wiring
 ├── rag/
-│   ├── vectorstore.py     # ChromaDB + HuggingFace embeddings
-│   └── retriever.py       # similarity search wrapper
-│
-└── tools/
-    └── web_search.py      # DuckDuckGo wrapper
+│   ├── vectorstore.py  # ChromaDB + embeddings
+│   └── retriever.py    # Similarity search
+├── tools/
+│   └── web_search.py   # DuckDuckGo search
+├── requirements.txt
+└── .env.example
 ```
 
----
+## ⚙️ Installation
 
-## 🤖 The 5 Agents
+1. Clone the repository:
 
-| Agent | Role | Input → Output |
-|-------|------|----------------|
-| **Planner** | Query decomposer | query → sub_tasks |
-| **Researcher** | Data gatherer | sub_tasks → search_results + retrieved_docs |
-| **Analyst** | Synthesizer | raw data → structured analysis |
-| **Writer** | Report author | analysis + critique → draft_report |
-| **Critic** | Quality gatekeeper | draft_report → score + critique |
+```
+git clone https://github.com/JAIMINRSOJITRA/langgraph-research-assistant.git
+```
 
----
+2. Navigate to the project:
 
-## 🔑 What Makes This a Strong LangGraph Portfolio Project
+```
+cd langgraph-research-assistant
+```
 
-1. **Cyclic graph** — The Writer↔Critic loop is impossible in simple chains
-2. **Conditional edges** — `should_revise()` dynamically routes the graph
-3. **Dual data sources** — Web search + RAG working together
-4. **Structured state** — TypedDict ensures type safety across all agents
-5. **Configurable quality threshold** — Tune via QUALITY_THRESHOLD env var
+3. Install dependencies:
 
----
+```
+pip install -r requirements.txt
+```
 
-## ⚙️ Configuration
+4. Create your environment file and add your own key (never commit it):
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LLM_PROVIDER` | `groq` | `groq` or `ollama` |
-| `GROQ_API_KEY` | — | Get free at console.groq.com |
-| `GROQ_MODEL` | `llama-3.1-70b-versatile` | Any Groq model |
-| `MAX_REVISIONS` | `3` | Max Writer↔Critic loops |
-| `QUALITY_THRESHOLD` | `7` | Min score (1–10) to accept report |
-| `TOP_K` | `3` | RAG chunks retrieved per sub-task |
+```
+cp .env.example .env
+# then set GROQ_API_KEY (or LLM_PROVIDER=ollama for a local model)
+```
+
+5. Build the local knowledge base:
+
+```
+python ingest.py
+```
+
+## ▶️ Usage
+
+Launch the dashboard:
+
+```
+streamlit run app.py
+```
+
+Or use the command line:
+
+```
+python main.py                  # interactive REPL
+python main.py --demo           # run a built-in demo query
+python main.py "your question"  # single query
+```
+
+## 📊 Results / Demo
+
+* The graph compiles and runs end to end; the Planner's list parsing, the Critic's score parsing, and the revision-loop stop conditions (score ≥ threshold, or max revisions reached) were verified with mocked-LLM tests.
+* Sidebar settings (quality threshold, max revisions) take effect on every run, not just the first one in a session.
+* Run the dashboard locally to see agent steps stream live, then the final report with its quality score.
+
+## 🧠 What I Learned
+
+* Designing cyclic multi-agent workflows with LangGraph, including conditional edges and shared state
+* Building safe self-critique loops with two stop conditions (quality threshold and a revision cap) so they always terminate
+* Grounding LLM output with both local retrieval (RAG) and live search
+* Python module caching pitfalls in Streamlit: a plain `reload` doesn't update names already imported by other modules
+
+## 🔮 Future Improvements
+
+* Add an automated test suite to the repository
+* Show source citations next to each claim in the final report
+* Persist run history so past reports can be revisited
+
+## 🤝 Contributing
+
+Contributions, issues, and suggestions are welcome.
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 👨‍💻 Author
+
+Jaimin Sojitra
+
+* GitHub: https://github.com/JAIMINRSOJITRA
+* LinkedIn: https://www.linkedin.com/in/jaimin-sojitra-4683a1277/
