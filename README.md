@@ -17,6 +17,24 @@ It is useful for students, analysts, and anyone who wants a structured, self-rev
 * Configurable LLM backend: Groq (cloud) or Ollama (local)
 * Command-line modes: interactive REPL, `--demo`, or a single query
 
+## 🔄 Workflow
+
+How a research query becomes a reviewed report. The Critic can send the draft back to the Writer until it passes.
+
+```mermaid
+flowchart TD
+    Q(["User asks a research question"]) --> P["Planner<br/>splits it into 3-5 sub-tasks"]
+    P --> R["Researcher<br/>web search + knowledge-base lookup for each sub-task"]
+    KB[("ChromaDB knowledge base<br/>built by ingest.py")] -.-> R
+    R --> A["Analyst<br/>synthesizes the findings"]
+    A --> W["Writer<br/>drafts the report"]
+    W --> C["Critic<br/>scores the draft 1-10 and gives feedback"]
+    C --> D{"Score meets threshold<br/>or max revisions reached?"}
+    D -->|"No: revise"| W
+    D -->|"Yes"| F["Finalize"]
+    F --> O(["Final report + quality score"])
+```
+
 ## 🛠️ Tech Stack
 
 * Language: Python
